@@ -1,3 +1,9 @@
+/*
+*
+*	Author : Umut Riza ERTURK
+*	March 2010
+*	
+*/
 #pragma once
 
 #include "Vector3.h"

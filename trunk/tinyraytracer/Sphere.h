@@ -14,8 +14,8 @@ public:
 
 	Sphere(void);
 	Sphere( const Vector3& origin, Real radius);
-	Sphere( const Vector3& origin, Real radius, const Material& mat);
-	~Sphere();
+	Sphere( const Vector3& origin, Real radius, Material* pMaterial);
+	~Sphere(){VisualObject::~VisualObject();};
 
 	__forceinline Vector3 getNormal( const Vector3 &point  )
 	{
@@ -45,7 +45,7 @@ public:
 		Real rD = rB * rB - dst.dot(dst) + m_rSquareRadius;
 		if (rD > 0)
 		{
-			rD = Math::sqrtX(rD);
+			rD = MathUtil::sqrtX(rD);
 			Real r2 = rB + rD;
 			if(r2 > 0)
 			{

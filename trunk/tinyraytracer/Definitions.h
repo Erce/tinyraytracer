@@ -1,12 +1,19 @@
+/*
+*
+*	Author : Umut Riza ERTURK
+*	March 2010
+*	
+*/
+
 #pragma once
 #include <limits>
 
 #define Real float
-#define EPSILON	0.01f
+#define EPSILON	0.0001f	
 
-const static float MAX_FLOAT = 99999999.f;
+const static float MAX_FLOAT = 99999999999.9f;
 const static float MIN_FLOAT = -MAX_FLOAT;
-#define IntersectionType int
+#define		IntersectionType	int
 #define 	INTERSECTS_OUTSIDE  -10
 #define 	INTERSECTION_NO		 0
 #define 	INTERSECTS_INSIDE	 10

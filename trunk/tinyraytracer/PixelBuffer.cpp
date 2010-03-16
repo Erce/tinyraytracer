@@ -1,7 +1,7 @@
 #include "PixelBuffer.h"
 #include <Windows.h>
 
-PixelBuffer::PixelBuffer(unsigned int uiWidth, unsigned int uiHeight, unsigned int uiBufferChunkSize = 10)
+PixelBuffer::PixelBuffer(unsigned int uiWidth, unsigned int uiHeight, unsigned int uiBufferChunkSize)
 {
 	m_uiCurrentX = 0;
 	m_uiCurrentY = 0;

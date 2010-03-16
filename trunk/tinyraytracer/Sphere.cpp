@@ -3,26 +3,25 @@
 
 Sphere::Sphere(void)
 {
-	m_bIsLightEmiter = false;
 	m_Type = VOT_SPHERE;
+	SAFE_DELETE(m_pMaterial);
 }
 Sphere::Sphere( const Vector3& origin, Real radius)
 {
-	m_bIsLightEmiter = false;
 	m_Type = VOT_SPHERE;
 	m_Origin = origin;
 	m_Radius = radius;
 	m_rSquareRadius = m_Radius * m_Radius;
 	m_rInverseRadius = 1.f / m_Radius;
+	m_pMaterial = new Material();
 
 }
-Sphere::Sphere( const Vector3& origin, Real radius, const Material& mat)
+Sphere::Sphere( const Vector3& origin, Real radius, Material* pMaterial)
 {
-	m_bIsLightEmiter = false;
 	m_Type = VOT_SPHERE;
 	m_Origin = origin;
 	m_Radius = radius;
-	m_Material = mat;
+	m_pMaterial = pMaterial;
 	m_rSquareRadius = m_Radius * m_Radius;
 	m_rInverseRadius = 1.f / m_Radius;
 

@@ -1,5 +1,7 @@
 #pragma once
 #include "VisualObject.h"
+#include "PointLight.h"
+#include <vector>
 class Scene
 {
 public:
@@ -13,9 +15,10 @@ public:
 		VisualObject* pTmpVisualO;
 		IntersectionType ret=INTERSECTION_NO;
 		IntersectionType tmp;
-		for (unsigned int i = 0; i < m_uiNumVisualObjects; i++)
+		const unsigned int uiSz = m_VisualObjects.size();
+		for (unsigned int i = 0; i < uiSz; i++)
 		{
-			pTmpVisualO = m_pVisualObjects[i];
+			pTmpVisualO = m_VisualObjects[i];
 			tmp = pTmpVisualO->intersect(ray, rDistance);
 			if ( tmp != INTERSECTION_NO)
 			{
@@ -26,11 +29,28 @@ public:
 		return ret;
 	};
 
+	bool anyNonLightIntersects( const Ray& rRay, Real &rDistance )
+	{
+		const unsigned int uiSz = m_VisualObjects.size();
+
+		for (int i = 0; i < uiSz; i++)
+		{
+			VisualObject *pVisualObject = m_VisualObjects[i];
+			if (pVisualObject->intersect(rRay,rDistance))
+			{
+				return true;
+			}
+		}
+		return false;
+	};
+
 	void addVisualObject( VisualObject* pVisaulObject );
-	void addLightObject	( VisualObject* pVisaulObject );
-	bool anyNonLightIntersects( const Ray& rRay, Real &rDistance );
-	VisualObject **m_pVisualObjects;
-	VisualObject **m_pLightObjects;
-	unsigned int m_uiNumVisualObjects;
-	unsigned int m_uiNumLightObjects;
+	void addLightObject	( PointLight* pLight );
+
+
+
+	std::vector<VisualObject*> m_VisualObjects;
+
+	std::vector<PointLight*> m_LightObjects;
+
 };

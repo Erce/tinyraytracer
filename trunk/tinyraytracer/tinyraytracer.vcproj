@@ -252,6 +252,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\PointLight.h"
+				>
+			</File>
+			<File
 				RelativePath=".\Ray.h"
 				>
 			</File>
