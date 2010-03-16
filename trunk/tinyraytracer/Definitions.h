@@ -9,7 +9,7 @@
 #include <limits>
 
 #define Real float
-#define EPSILON	0.0001f	
+#define EPSILON	0.001f	
 
 const static float MAX_FLOAT = 99999999999.9f;
 const static float MIN_FLOAT = -MAX_FLOAT;
