@@ -194,10 +194,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\Ray.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\RayTracer.cpp"
 				>
 			</File>

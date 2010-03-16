@@ -6,7 +6,7 @@
 */
 
 #include "PixelBuffer.h"
-#include <Windows.h>
+
 
 /************************************************************************/
 /* init the pixel buffer                                               */

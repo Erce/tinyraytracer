@@ -51,7 +51,7 @@ public:
 	{
 		const unsigned int uiSz = m_VisualObjects.size();
 
-		for (int i = 0; i < uiSz; i++)
+		for (unsigned int i = 0; i < uiSz; i++)
 		{
 			VisualObject *pVisualObject = m_VisualObjects[i];
 			if (pVisualObject->intersect(rRay,rDistance))

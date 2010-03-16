@@ -10,7 +10,7 @@
 */
 
 #include "Colour3f.h"
-
+#include <Windows.h>
 class PixelBuffer
 {
 public:
