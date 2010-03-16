@@ -1,3 +1,12 @@
+
+/*
+*
+*	Author : Umut Riza ERTURK
+*	March 2010
+*	
+*	Using inline functions for efficiency reasons
+*/
+
 #pragma once
 #include "Definitions.h"
 #include "MathUtil.h"
@@ -95,7 +104,6 @@ public:
     {
         return Vector3(-x, -y, -z);
     }
-        // overloaded operators to help Vector3
         inline friend Vector3 operator * ( const Real rLeftSideValue, const Vector3& vRightSide )
         {
             return Vector3(

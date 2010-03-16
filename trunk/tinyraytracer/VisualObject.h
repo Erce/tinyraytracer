@@ -1,3 +1,10 @@
+/*
+*
+*	Author : Umut Riza ERTURK
+*	March 2010
+*	
+*/
+
 #pragma once
 #include "Definitions.h"
 #include "Ray.h"

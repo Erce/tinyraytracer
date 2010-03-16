@@ -1,3 +1,10 @@
+/*
+*
+*	Author : Umut Riza ERTURK
+*	March 2010
+*	
+*/
+
 #pragma once
 #include "visualobject.h"
 
@@ -25,12 +32,14 @@ public:
 		return (D!=0) && ((D < 0)^(tmp < 0));
 
 	}
-	inline IntersectionType intersect(const Ray& ray, Real &rDistance)
+	__forceinline IntersectionType intersect(const Ray& ray, Real &rDistance)
 	{
 		Real D = m_Normal.dot(ray.dir);
+		// if not parallel
 		if (D != 0)
 		{
 			Real tmpDist = -(m_Normal.dot(ray.point) + m_rD) / D;
+			// if doesn't intersects at the back of the ray's starting point
 			if (tmpDist > 0 && tmpDist < rDistance )
 			{
 				rDistance = tmpDist;

@@ -1,3 +1,11 @@
+/*
+*
+*	Author : Umut Riza ERTURK
+*	March 2010
+*
+*	This is the main ray tracer class
+*/
+
 #pragma once
 #include "VisualObject.h"
 #include "PointLight.h"
@@ -9,6 +17,12 @@ public:
 	~Scene(void);
 
 	  
+	/*
+	*	finds nearest intersection point smaller than rDistance and updates the rDistance with the new value
+	*	also updates pVisaulObject with the intersection object
+	*	this function is the most important function in terms of efficiency
+	*	in the future regular grids will be used in order to fasten up ray tracing
+	*/
 	inline IntersectionType getNearestIntersection( const Ray& ray, VisualObject*& pVisaulObject, Real& rDistance )
 	{
 		pVisaulObject = 0;
@@ -16,6 +30,7 @@ public:
 		IntersectionType ret=INTERSECTION_NO;
 		IntersectionType tmp;
 		const unsigned int uiSz = m_VisualObjects.size();
+		// 
 		for (unsigned int i = 0; i < uiSz; i++)
 		{
 			pTmpVisualO = m_VisualObjects[i];
@@ -29,6 +44,9 @@ public:
 		return ret;
 	};
 
+	/*
+	* Finds out if any non light objects intersects with the ray under rDistance
+	*/
 	bool anyNonLightIntersects( const Ray& rRay, Real &rDistance )
 	{
 		const unsigned int uiSz = m_VisualObjects.size();

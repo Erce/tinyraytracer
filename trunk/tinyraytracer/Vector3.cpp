@@ -1,3 +1,10 @@
+/*
+*
+*	Author : Umut Riza ERTURK
+*	March 2010
+*	
+*/
+
 #include "Vector3.h"
 
 const Vector3 Vector3::VECTOR_ZERO( 0, 0, 0 );

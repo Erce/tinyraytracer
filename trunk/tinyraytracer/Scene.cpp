@@ -1,3 +1,10 @@
+/*
+*
+*	Author : Umut Riza ERTURK
+*	March 2010
+*	
+*/
+
 #include "Scene.h"
 
 using std::vector;
