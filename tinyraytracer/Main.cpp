@@ -10,6 +10,10 @@
 
 #pragma once
 
+// exceptions are disabled for release mode 
+// so disable the warnings 
+#pragma warning(disable:4530)
+
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include "RayTracer.h"
@@ -147,6 +151,7 @@ bool prepareWindow()
 	((unsigned long*)g_pBitmapInfo->bmiColors)[2] = 255;
 	g_WindowHdc = GetDC(g_hWindowClass);
 	SystemParametersInfo(SPI_SETSCREENSAVEACTIVE, 0, 0, 0);
+	return true;
 }
 
 
