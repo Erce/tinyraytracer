@@ -1,4 +1,8 @@
-Naive implementation of ray tracing by umut r. e.
+Naive implementation of ray tracing 
+by umut r. erturk
+erturk.umut@gmail.com, 
+http://www.hevi.info
+
 For now:
 * brute force ray-object intersection testing
 * sphere and plane primitives
