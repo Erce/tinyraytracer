@@ -6,9 +6,26 @@ class Vector3
 {
 public:
 
-	Real x;
-	Real y;
-	Real z;
+	union 
+	{
+		struct  
+		{
+			Real x;
+			Real y;
+			Real z;
+		};
+		struct
+		{
+			Real r;
+			Real g;
+			Real b;
+		};
+		struct
+		{
+			Real data[3];
+		};
+
+	};
 
 
 	inline Vector3(void){};
@@ -26,9 +43,7 @@ public:
 	}
 	inline Vector3( const Real f )
 	{
-		x =f;
-		y =f;
-		z =f;
+		x = y = z = f;
 	}
 	~Vector3(void){};
 
@@ -57,18 +72,18 @@ public:
             z - vec.z);
     }
     
-	inline Vector3 operator * ( const Real fScalar ) const
+	inline Vector3 operator * ( const Real rLeftSideValue ) const
     {
         return Vector3(
-            x * fScalar,
-            y * fScalar,
-            z * fScalar);
+            x * rLeftSideValue,
+            y * rLeftSideValue,
+            z * rLeftSideValue);
     }
 
-    inline Vector3 operator / ( const Real fScalar ) const
+    inline Vector3 operator / ( const Real rLeftSideValue ) const
     {       
 
-        Real fInv = 1.f / fScalar;
+        Real fInv = 1.f / rLeftSideValue;
 
         return Vector3(
             x * fInv,
@@ -81,118 +96,116 @@ public:
         return Vector3(-x, -y, -z);
     }
         // overloaded operators to help Vector3
-        inline friend Vector3 operator * ( const Real fScalar, const Vector3& rkVector )
+        inline friend Vector3 operator * ( const Real rLeftSideValue, const Vector3& vRightSide )
         {
             return Vector3(
-                fScalar * rkVector.x,
-                fScalar * rkVector.y,
-                fScalar * rkVector.z);
+                rLeftSideValue * vRightSide.x,
+                rLeftSideValue * vRightSide.y,
+                rLeftSideValue * vRightSide.z);
         }
 
-        inline friend Vector3 operator / ( const Real fScalar, const Vector3& rkVector )
+        inline friend Vector3 operator / ( const Real rLeftSideValue, const Vector3& vRightSide )
         {
             return Vector3(
-                fScalar / rkVector.x,
-                fScalar / rkVector.y,
-                fScalar / rkVector.z);
+                rLeftSideValue / vRightSide.x,
+                rLeftSideValue / vRightSide.y,
+                rLeftSideValue / vRightSide.z);
         }
 
-        inline friend Vector3 operator + (const Vector3& lhs, const Real rhs)
+        inline friend Vector3 operator + (const Vector3& leftSideValue, const Real rightSideValue)
         {
             return Vector3(
-                lhs.x + rhs,
-                lhs.y + rhs,
-                lhs.z + rhs);
+                leftSideValue.x + rightSideValue,
+                leftSideValue.y + rightSideValue,
+                leftSideValue.z + rightSideValue);
         }
 
-		inline friend Vector3 operator * (const Vector3& lhs, const Vector3& rhs)
+		inline friend Vector3 operator * (const Vector3& leftSideValue, const Vector3& rightSideValue)
 		{
 			return Vector3(
-				lhs.x * rhs.x,
-				lhs.y * rhs.y,
-				lhs.z * rhs.z);
+				leftSideValue.x * rightSideValue.x,
+				leftSideValue.y * rightSideValue.y,
+				leftSideValue.z * rightSideValue.z);
 		}
 
-        inline friend Vector3 operator + (const Real lhs, const Vector3& rhs)
+        inline friend Vector3 operator + (const Real leftSideValue, const Vector3& rightSideValue)
         {
             return Vector3(
-                lhs + rhs.x,
-                lhs + rhs.y,
-                lhs + rhs.z);
+                leftSideValue + rightSideValue.x,
+                leftSideValue + rightSideValue.y,
+                leftSideValue + rightSideValue.z);
         }
 
-        inline friend Vector3 operator - (const Vector3& lhs, const Real rhs)
+        inline friend Vector3 operator - (const Vector3& leftSideValue, const Real rightSideValue)
         {
             return Vector3(
-                lhs.x - rhs,
-                lhs.y - rhs,
-                lhs.z - rhs);
+                leftSideValue.x - rightSideValue,
+                leftSideValue.y - rightSideValue,
+                leftSideValue.z - rightSideValue);
         }
 
-        inline friend Vector3 operator - (const Real lhs, const Vector3& rhs)
+        inline friend Vector3 operator - (const Real leftSideValue, const Vector3& rightSideValue)
         {
             return Vector3(
-                lhs - rhs.x,
-                lhs - rhs.y,
-                lhs - rhs.z);
+                leftSideValue - rightSideValue.x,
+                leftSideValue - rightSideValue.y,
+                leftSideValue - rightSideValue.z);
         }
 
         // arithmetic updates
-        inline Vector3& operator += ( const Vector3& rkVector )
+        inline Vector3& operator += ( const Vector3& vRightSide )
         {
-            x += rkVector.x;
-            y += rkVector.y;
-            z += rkVector.z;
+            x += vRightSide.x;
+            y += vRightSide.y;
+            z += vRightSide.z;
 
             return *this;
         }
 
-        inline Vector3& operator += ( const Real fScalar )
+        inline Vector3& operator += ( const Real rLeftSideValue )
         {
-            x += fScalar;
-            y += fScalar;
-            z += fScalar;
+            x += rLeftSideValue;
+            y += rLeftSideValue;
+            z += rLeftSideValue;
             return *this;
         }
 
-        inline Vector3& operator -= ( const Vector3& rkVector )
+        inline Vector3& operator -= ( const Vector3& vRightSide )
         {
-            x -= rkVector.x;
-            y -= rkVector.y;
-            z -= rkVector.z;
+            x -= vRightSide.x;
+            y -= vRightSide.y;
+            z -= vRightSide.z;
+            return *this;
+        }
+
+        inline Vector3& operator -= ( const Real rLeftSideValue )
+        {
+            x -= rLeftSideValue;
+            y -= rLeftSideValue;
+            z -= rLeftSideValue;
+            return *this;
+        }
+
+        inline Vector3& operator *= ( const Real rLeftSideValue )
+        {
+            x *= rLeftSideValue;
+            y *= rLeftSideValue;
+            z *= rLeftSideValue;
+            return *this;
+        }
+
+        inline Vector3& operator *= ( const Vector3& vRightSide )
+        {
+            x *= vRightSide.x;
+            y *= vRightSide.y;
+            z *= vRightSide.z;
 
             return *this;
         }
 
-        inline Vector3& operator -= ( const Real fScalar )
+        inline Vector3& operator /= ( const Real rLeftSideValue )
         {
-            x -= fScalar;
-            y -= fScalar;
-            z -= fScalar;
-            return *this;
-        }
-
-        inline Vector3& operator *= ( const Real fScalar )
-        {
-            x *= fScalar;
-            y *= fScalar;
-            z *= fScalar;
-            return *this;
-        }
-
-        inline Vector3& operator *= ( const Vector3& rkVector )
-        {
-            x *= rkVector.x;
-            y *= rkVector.y;
-            z *= rkVector.z;
-
-            return *this;
-        }
-
-        inline Vector3& operator /= ( const Real fScalar )
-        {
-            Real fInv = 1.f / fScalar;
-
+            Real fInv = 1.f / rLeftSideValue;
             x *= fInv;
             y *= fInv;
             z *= fInv;
@@ -201,19 +214,11 @@ public:
         }
         __forceinline Real length () const
         {
-            return Math::sqrtX( squaredLength() );
+            return MathUtil::sqrtX( squaredLength() );
         }
         __forceinline Real squaredLength () const
         {
             return ( x*x + y*y + z*z );
-        }
-        __forceinline Real length(const Vector3& rhs) const
-        {
-            return (*this - rhs).length();
-        }
-        __forceinline Real lengthSquare(const Vector3& rhs) const
-        {
-            return (*this - rhs).squaredLength();
         }
         __forceinline Real dot(const Vector3& vec) const
         {
@@ -221,14 +226,14 @@ public:
         }
         __forceinline void normalise()
         {
-			(*this) /= Math::sqrtX(x*x + y*y + z*z);
+			(*this) *= 1.f / length();
         }
-        __forceinline Vector3 crossProduct( const Vector3& rkVector ) const
+        __forceinline Vector3 crossProduct( const Vector3& vRightSide ) const
         {
             return Vector3(
-                y * rkVector.z - z * rkVector.y,
-                z * rkVector.x - x * rkVector.z,
-                x * rkVector.y - y * rkVector.x);
+                y * vRightSide.z - z * vRightSide.y,
+                z * vRightSide.x - x * vRightSide.z,
+                x * vRightSide.y - y * vRightSide.x);
         }
         __forceinline Vector3 normalisedCopy(void) const
         {
@@ -244,12 +249,11 @@ public:
         {
             *this -= ( (2 * this->dot(normal)) * normal ) ;
         }
-        static const Vector3 ZERO;
-        static const Vector3 UNIT_X;
-        static const Vector3 UNIT_Y;
-        static const Vector3 UNIT_Z;
-        static const Vector3 NEGATIVE_UNIT_X;
-        static const Vector3 NEGATIVE_UNIT_Y;
-        static const Vector3 NEGATIVE_UNIT_Z;
-        static const Vector3 UNIT_SCALE;
+        static const Vector3 VECTOR_ZERO;
+        static const Vector3 VECTOR_UNIT_X;
+		static const Vector3 VECTOR_NEGATIVE_UNIT_X;
+        static const Vector3 VECTOR_UNIT_Y;
+		static const Vector3 VECTOR_NEGATIVE_UNIT_Y;
+        static const Vector3 VECTOR_UNIT_Z;
+        static const Vector3 VECTOR_NEGATIVE_UNIT_Z;
 };

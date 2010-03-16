@@ -3,21 +3,15 @@
 
 VisualObject::VisualObject(void)
 {
-	m_bIsLightEmiter = false;
 	m_Type = VOT_NONE;
 }
 VisualObject::VisualObject(VisualObjectType type)
 {
-	m_bIsLightEmiter = false;
 	m_Type = type;
 }
-VisualObject::VisualObject(VisualObjectType type,  const Material& mat)
+VisualObject::VisualObject(VisualObjectType type,  Material* pMaterial)
 {
-	m_bIsLightEmiter = false;
 	m_Type = type;
-	m_Material = mat;
-}
-VisualObject::~VisualObject(void)
-{
+	m_pMaterial = pMaterial;
 }
 

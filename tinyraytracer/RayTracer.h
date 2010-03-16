@@ -29,7 +29,9 @@ public:
 	Real		m_rDivFactor;
 	unsigned int m_uiNumOfPixels;
 	unsigned int m_uiNumOfThreads;
-	DWORD  		 m_ThreadIds[16];
+	std::vector<HANDLE> m_ThreadHandles;
+	std::vector<DWORD>  m_ThreadIds;
+
 	void renderPixel(std::stack<Ray> &rays, Colour3f& rColour);
 
 };

@@ -1,46 +1,48 @@
 #include "Scene.h"
 
+using std::vector;
 Scene::Scene(void)
 {
-	m_pVisualObjects = new VisualObject* [1024];
-	m_pLightObjects = new VisualObject* [16];
-	m_uiNumVisualObjects = 0;
-	m_uiNumLightObjects = 0;
-
 }
 
 Scene::~Scene(void)
 {
+
+	{
+		vector<VisualObject*>::iterator it = m_VisualObjects.begin();
+		vector<VisualObject*>::iterator endIt = m_VisualObjects.end();
+		while(it != endIt)
+		{
+			VisualObject *pVO = *it;
+			SAFE_DELETE(pVO);
+			it++;
+		}
+	}
+
+
+	{
+		vector<PointLight*>::iterator it = m_LightObjects.begin();
+		vector<PointLight*>::iterator endIt = m_LightObjects.end();
+		while(it != endIt)
+		{
+			PointLight *pLO = *it;
+			SAFE_DELETE(pLO);
+			it++;
+		}
+	}
+
+
+
 }
 
 void Scene::addVisualObject(VisualObject* pVisaulObject)
 {
-	m_pVisualObjects[m_uiNumVisualObjects++] = pVisaulObject;
+	m_VisualObjects.push_back(pVisaulObject);
 }
 
-void Scene::addLightObject(VisualObject *pVisaulObject)
+void Scene::addLightObject(PointLight* pLight)
 {
-	m_pVisualObjects[m_uiNumVisualObjects++] = pVisaulObject;
-	m_pLightObjects[m_uiNumLightObjects++] = pVisaulObject;
-	pVisaulObject->m_bIsLightEmiter = true;
+	m_LightObjects.push_back(pLight);
+
 }
-
-bool Scene::anyNonLightIntersects( const Ray& rRay, Real &rDistance )
-{
-	for (int i = 0; i < m_uiNumVisualObjects; i++)
-	{
-		VisualObject *pVisualObject = m_pVisualObjects[i];
-		if (pVisualObject->m_bIsLightEmiter)
-		{
-			continue;
-		}
-
-		if (pVisualObject->intersect(rRay,rDistance))
-		{
-			return true;
-		}
-	}
-	return false;
-}
-
 

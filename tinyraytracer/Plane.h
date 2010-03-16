@@ -10,10 +10,10 @@ public:
 
 	Plane(void);
 	Plane( const Vector3& normal, Real point);
-	Plane( const Vector3& normal, Real point, const Material& mat);
-	~Plane();
+	Plane( const Vector3& normal, Real point, Material* pMaterail);
+	~Plane(){VisualObject::~VisualObject();};;
 
-	__forceinline Vector3 getNormal( const Vector3 &point = Vector3::ZERO )
+	__forceinline Vector3 getNormal( const Vector3 &point = Vector3::VECTOR_ZERO )
 	{
 		return m_Normal;
 	}

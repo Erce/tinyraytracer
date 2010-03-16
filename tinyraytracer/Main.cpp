@@ -1,45 +1,76 @@
+/*
+*
+*	Author : Umut Riza ERTURK
+*	March 2010
+*	
+*
+*	This file is the initialize the window
+*	and ray tracer
+*/
+
 #pragma once
 
+#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
-#include <stdlib.h>
-#include <iostream>
 #include "RayTracer.h"
 #include "Sphere.h"
 #include "Plane.h"
+#include "PointLight.h"
 
 
+//----------------------------------------
+//these are the parameters to be used for
+// ray tracer initialization
+#define SCREEN_WIDTH	800
+#define SCREEN_HEIGHT	600
+#define AMBIENT_COLOUR	COLOUR_BLACK
+#define NUM_OF_MAX_REFLECTIONS	8
+#define SQRT_OF_RAYS_PER_PIXEL	1
+#define NUM_OF_THREADS_PER_CPU	1
 
-#define SCRWIDTH	800
-#define SCRHEIGHT	600
 
-static WNDCLASS wc;
-static HWND wnd;
-static char bitmapbuffer[sizeof( BITMAPINFO ) + 16];
-static BITMAPINFO* bh;
-HDC window_hdc;
-Pixel* pBuffer = 0;
-PixelBuffer* pPixelBuffer = 0;
-RayTracer *pRayTracer = 0;
+//----------------------------------------
+// Globals for window init
+static WNDCLASS		g_WindowClass;
+static HWND			g_hWindowClass;
+static char			g_pBitmapBuffer[sizeof( BITMAPINFO ) + 16];
+static BITMAPINFO*	g_pBitmapInfo;
+HDC					g_WindowHdc;
 
-void DrawWindow();
 
-static LRESULT CALLBACK WndProc( HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam )
+//----------------------------------------
+// Globals for ray tracer
+Pixel*				g_pScreenPixels = 0;
+PixelBuffer*		g_pScreenBuffer = 0;
+RayTracer*			g_pRayTracer = 0;
+Scene*				g_pScene = 0;
+Camera*				g_pCamera = 0;
+
+bool				g_bProcessRunning = true;
+
+void paintWindow();
+
+/*
+*	Windows API window callback function
+*/
+static LRESULT CALLBACK windowCallbackProcedure( HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
 	int result = 0, keycode = 0;
 	switch (message)
 	{
 	case WM_PAINT:
-		if (!pBuffer) break;
-		StretchDIBits( window_hdc, 0, 0, SCRWIDTH, SCRHEIGHT, 0, 0, SCRWIDTH, SCRHEIGHT, pBuffer, bh, DIB_RGB_COLORS, SRCCOPY );
-		ValidateRect( wnd, NULL );
+		if (!g_pScreenPixels) break;
+		StretchDIBits( g_WindowHdc, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, g_pScreenPixels, g_pBitmapInfo, DIB_RGB_COLORS, SRCCOPY );
+		ValidateRect( g_hWindowClass, NULL );
 		break;
 	case WM_KEYDOWN:
 		if ((wParam & 0xFF) != 27) break;
 	case WM_CLOSE:
-		ReleaseDC( wnd, window_hdc );
-		DestroyWindow( wnd );
+		ReleaseDC( g_hWindowClass, g_WindowHdc );
+		DestroyWindow( g_hWindowClass );
 		SystemParametersInfo( SPI_SETSCREENSAVEACTIVE, 1, 0, 0 );
-		ExitProcess( 0 );
+		g_bProcessRunning = false;
+		return 0;
 		break;
 	default:
 		result = DefWindowProc(hWnd,message,wParam,lParam);
@@ -47,123 +78,185 @@ static LRESULT CALLBACK WndProc( HWND hWnd, UINT message, WPARAM wParam, LPARAM 
 	return result;
 }
 
-int APIENTRY WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,int nCmdShow)
-{
-	RECT rect;
-	int cc;
-	wc.style = CS_OWNDC | CS_VREDRAW | CS_HREDRAW;
-	wc.lpfnWndProc = WndProc;
-	wc.cbClsExtra = wc.cbWndExtra = 0;
-	wc.hInstance = 0;
-	wc.hIcon = NULL;
-	wc.hCursor = LoadCursor(0,IDC_ARROW);
-	wc.hbrBackground = NULL;
-	wc.lpszMenuName = NULL;
-	wc.lpszClassName = "raytracer";
-	if (!RegisterClass(&wc)) return FALSE;
-	rect.left = rect.top = 0;
-	rect.right = SCRWIDTH;
-	rect.bottom = SCRHEIGHT;
-	AdjustWindowRect( &rect, WS_POPUP|WS_SYSMENU|WS_CAPTION, 0 );
-	rect.right -= rect.left, rect.bottom -= rect.top;
-	wnd = CreateWindowEx( 0, "raytracer", "raytracer", WS_OVERLAPPEDWINDOW & ~WS_MAXIMIZEBOX & WS_THICKFRAME,
-		CW_USEDEFAULT, CW_USEDEFAULT, rect.right, rect.bottom, 0, 0, 0, 0 );
-	ShowWindow(wnd,SW_NORMAL);
-	for ( int cc = 0; cc < sizeof( BITMAPINFOHEADER ) + 16; cc++ )	bitmapbuffer[cc] = 0;
-	bh = (BITMAPINFO *)&bitmapbuffer;
-	bh->bmiHeader.biSize = sizeof( BITMAPINFOHEADER );
-	bh->bmiHeader.biPlanes = 1;
-	bh->bmiHeader.biBitCount = 32;
-	bh->bmiHeader.biCompression = BI_BITFIELDS;
-	bh->bmiHeader.biWidth = SCRWIDTH;
-	bh->bmiHeader.biHeight = -SCRHEIGHT;
-	((unsigned long*)bh->bmiColors)[0] = 255 << 16;
-	((unsigned long*)bh->bmiColors)[1] = 255 << 8;
-	((unsigned long*)bh->bmiColors)[2] = 255;
-	window_hdc = GetDC(wnd);
-	SystemParametersInfo(SPI_SETSCREENSAVEACTIVE, 0, 0, 0);
-	// prepare output canvas
 
-	SYSTEM_INFO sysInfo;
-	GetSystemInfo(&sysInfo);
-	
-
-
-	Camera *pCamera = new Camera(Vector3(-4,3,0),Vector3(-4,-3,0),Vector3(0,0,1),10);
-	Scene *pScene = new Scene();
-	pPixelBuffer = new PixelBuffer(SCRWIDTH,SCRHEIGHT,100);
-	pBuffer = pPixelBuffer->m_pScreenBuffer;
-	pRayTracer = new RayTracer(sysInfo.dwNumberOfProcessors,pPixelBuffer,pScene,pCamera,Colour3f(.5,.5,.5),4,1);
-	Material mat1;
-	mat1.m_RColour.x = .80f;
-	mat1.m_RColour.y = .60f;
-	mat1.m_RColour.z = .60f;
-	mat1.m_rDiffuse = .7f;
-	mat1.m_rReflectivity = .1f;
-	mat1.m_RSpecular = .6f;
-
-	Material mat2;
-	mat2.m_RColour.x = .70f;
-	mat2.m_RColour.y = .70f;
-	mat2.m_RColour.z = .70f;
-	mat2.m_rDiffuse = .6f;
-	mat2.m_rReflectivity = .8f;
-	mat2.m_RSpecular = .4;
-
-	Material mat3;
-	mat3.m_RColour.x = .80f;
-	mat3.m_RColour.y = .80f;
-	mat3.m_RColour.z = .80f;
-	mat3.m_rDiffuse = 1.f;
-	mat3.m_rReflectivity = 1.f;
-	mat3.m_RSpecular = 1.f;
-
-	for (int i = 0; i < 10; i++)
-	{
-		for ( int j = 0; j < 10; j++)
-		{
-			for ( int k = 0; k < 1; k++)
-			{
-				pScene->addVisualObject(new Sphere(Vector3(-40.f + i* 9.3f, -10.f + j* 5.3f, 300 - k* 10),2.5f,mat2));
-			}
-			mat2.m_RColour.x += j / 255.f;
-		}
-	}
-
-	pScene->addVisualObject(new Sphere(Vector3(-15, 20, 95),20.0f,mat3));
-
-	pScene->addVisualObject(new Plane(Vector3::UNIT_Y,13.f,mat1));
-	pScene->addLightObject(new Sphere(Vector3(0,30.f,35.f),1.1f,mat3));
-
-//	pScene->addLightObject(new Sphere(Vector3(-300,300.f,1000.f),10.1f,mat3));
-	
-	pRayTracer->renderScene();
-
-	while (1)
-	{
-		DrawWindow();
-		Sleep(100);
-	}
-	return 1;
-}
-
-void DrawWindow()
+/*
+*	Paints the window with the current pixel values
+*/
+void paintWindow()
 {
 	MSG message;
 	HACCEL haccel = 0;
-	InvalidateRect( wnd,NULL,TRUE );
-	SendMessage( wnd, WM_PAINT, 0, 0 );
-	while (PeekMessage( &message, wnd, 0, 0, PM_REMOVE ))
+	InvalidateRect( g_hWindowClass,NULL,TRUE );
+	SendMessage( g_hWindowClass, WM_PAINT, 0, 0 );
+	while (PeekMessage( &message, g_hWindowClass, 0, 0, PM_REMOVE ))
 	{
-		if (TranslateAccelerator( wnd, haccel, &message ) == 0)
+		if (TranslateAccelerator( g_hWindowClass, haccel, &message ) == 0)
 		{
 			TranslateMessage( &message );
 			DispatchMessage( &message );
 		}
 	}
-	Sleep( 0 );
 }
 
+
+
+
+/*
+*	inits window
+*/
+bool prepareWindow()
+{
+	RECT rectangle;
+	g_WindowClass.style			= CS_OWNDC | CS_VREDRAW | CS_HREDRAW;
+	g_WindowClass.lpfnWndProc	= windowCallbackProcedure;
+	g_WindowClass.cbClsExtra	= g_WindowClass.cbWndExtra = 0;
+	g_WindowClass.hInstance		= 0;
+	g_WindowClass.hIcon			= NULL;
+	g_WindowClass.hCursor		= LoadCursor(0,IDC_ARROW);
+	g_WindowClass.hbrBackground = NULL;
+	g_WindowClass.lpszMenuName	= NULL;
+	g_WindowClass.lpszClassName = "tiny raytracer";
+	if (!RegisterClass(&g_WindowClass))
+	{
+		return false;
+	}
+	rectangle.left				= 0;
+	rectangle.top				= 0;
+	rectangle.right				= SCREEN_WIDTH;
+	rectangle.bottom			= SCREEN_HEIGHT;
+
+	AdjustWindowRect( &rectangle, WS_POPUP|WS_SYSMENU|WS_CAPTION, 0 );
+
+	rectangle.right -= rectangle.left;
+	rectangle.bottom -= rectangle.top;
+	g_hWindowClass = CreateWindowEx( 0, "tiny raytracer", "tiny raytracer", WS_OVERLAPPEDWINDOW & ~WS_MAXIMIZEBOX & WS_THICKFRAME,
+		CW_USEDEFAULT, CW_USEDEFAULT, rectangle.right, rectangle.bottom, 0, 0, 0, 0 );
+	ShowWindow(g_hWindowClass,SW_NORMAL);
+	memset(g_pBitmapBuffer,0,sizeof( BITMAPINFOHEADER ) + 16);
+
+	g_pBitmapInfo = (BITMAPINFO *)&g_pBitmapBuffer;
+	g_pBitmapInfo->bmiHeader.biSize = sizeof( BITMAPINFOHEADER );
+	g_pBitmapInfo->bmiHeader.biPlanes = 1;
+	g_pBitmapInfo->bmiHeader.biBitCount = 32;
+	g_pBitmapInfo->bmiHeader.biCompression = BI_BITFIELDS;
+	g_pBitmapInfo->bmiHeader.biWidth = SCREEN_WIDTH;
+	g_pBitmapInfo->bmiHeader.biHeight = -SCREEN_HEIGHT;
+	((unsigned long*)g_pBitmapInfo->bmiColors)[0] = 255 << 16;
+	((unsigned long*)g_pBitmapInfo->bmiColors)[1] = 255 << 8;
+	((unsigned long*)g_pBitmapInfo->bmiColors)[2] = 255;
+	g_WindowHdc = GetDC(g_hWindowClass);
+	SystemParametersInfo(SPI_SETSCREENSAVEACTIVE, 0, 0, 0);
+}
+
+
+
+
+/*
+*	Inits ray tracer
+*/
+void initRayTracer()
+{
+	SYSTEM_INFO sysInfo;
+	GetSystemInfo(&sysInfo);
+
+	// number of threads to be used for ray tracing
+	DWORD dwNumOfThreads = sysInfo.dwNumberOfProcessors * NUM_OF_THREADS_PER_CPU;
+
+	// if something got wrong,
+	// create one thread
+	if(dwNumOfThreads < 1)
+	{
+		dwNumOfThreads = 0;
+	}
+
+
+	g_pCamera		= new Camera(Vector3(-4,3,0),Vector3(-4,-3,0),Vector3(0,0,1),5);
+	g_pScene		= new Scene();
+	g_pScreenBuffer = new PixelBuffer(SCREEN_WIDTH,SCREEN_HEIGHT,100);
+	g_pScreenPixels = g_pScreenBuffer->m_pScreenBuffer;
+	g_pRayTracer	= new RayTracer(
+		dwNumOfThreads,
+		g_pScreenBuffer,
+		g_pScene,
+		g_pCamera,
+		AMBIENT_COLOUR, 
+		NUM_OF_MAX_REFLECTIONS ,
+		SQRT_OF_RAYS_PER_PIXEL
+		);
+}
+
+
+
+
+/*
+*	inits the scene
+*/
+void initScene()
+{
+	Material* mat1 = new Material(1.f,.3f,COLOUR_GREEN);
+	Material* mat2 = new Material(.5f,.5f,COLOUR_RED);
+	Material* mat3 = new Material(.9f,.7f,COLOUR_GREY);
+	Material* mat4 = new Material(.01f,.01f,COLOUR_BLUE);
+	Material* mat5 = new Material(.9f,.01f,COLOUR_WHITE);
+
+
+	g_pScene->addVisualObject(new Sphere(Vector3(-60.f, 15.f, 150.f),3.f,mat2));
+	g_pScene->addVisualObject(new Sphere(Vector3(-20, 15.f, 150.f),5.f,mat2));
+	g_pScene->addVisualObject(new Sphere(Vector3(80.f, 45.f, 250.f),45.f,mat2));
+	g_pScene->addVisualObject(new Sphere(Vector3(20.f, 15.f, 150.f),10.f,mat4));
+	g_pScene->addVisualObject(new Sphere(Vector3(-100.f, 15.f, 150.f),10.f,mat5));
+	g_pScene->addVisualObject(new Sphere(Vector3(-90.f, 95.f, 500.f),115.f,mat3));
+	g_pScene->addVisualObject(new Sphere(Vector3(-200.f, 155.f, 350.f),25.f,mat3));
+
+	g_pScene->addVisualObject(new Plane(Vector3::VECTOR_UNIT_Y,25.f,mat1));
+	g_pScene->addLightObject(new PointLight(COLOUR_WHITE, Vector3(-1000.f,1000.f,0),1000000.f));
+	g_pScene->addLightObject(new PointLight(COLOUR_WHITE, Vector3(500.f,500.f,-500),1000000.f));
+}
+
+/*
+*	starts ray tracing and loops continuesly
+*/
+void startRayTracing()
+{
+	g_pRayTracer->renderScene();
+
+	while (g_bProcessRunning)
+	{
+		paintWindow();
+		Sleep(200); // window painting in every 200 ms
+	}
+}
+
+
+/*
+*	WIN API main function
+*/
+int APIENTRY WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,int nCmdShow)
+{
+
+	if(prepareWindow())
+	{
+
+		initRayTracer();
+
+		initScene();
+
+		startRayTracing();
+
+		SAFE_DELETE(g_pRayTracer);
+
+		CloseHandle(g_hWindowClass);
+
+	}
+	else
+	{
+		ExitProcess( -1 );
+		return -1;
+	}
+
+	ExitProcess( 0 );
+	return 0;
+}
 
 
 

@@ -3,23 +3,22 @@
 
 Plane::Plane(void)
 {
-	m_bIsLightEmiter = false;
 	m_Type = VOT_PLANE;
 }
 Plane::Plane( const Vector3& normal, Real D )
 {
-	m_bIsLightEmiter = false;
 	m_Type = VOT_PLANE;
 	m_Normal = normal;
 	m_rD = D;
+	m_pMaterial = new Material();
+
 
 }
-Plane::Plane( const Vector3& normal, Real D, const Material& mat)
+Plane::Plane( const Vector3& normal, Real D, Material* mat)
 {
-	m_bIsLightEmiter = false;
 	m_Type = VOT_PLANE;
 	m_Normal = normal;
 	m_rD = D;
-	m_Material = mat;
+	m_pMaterial = mat;
 }
 
