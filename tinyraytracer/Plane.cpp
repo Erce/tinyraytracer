@@ -1,3 +1,15 @@
+/*
+*
+*	Author : Umut Riza ERTURK
+*	March 2010
+*	
+*
+*	This is the pixel buffer class which
+*	enables ray tracer to run in multithread
+*	by protecting the pixelbuffer with mutex
+*/
+
+
 #include "Plane.h"
 
 

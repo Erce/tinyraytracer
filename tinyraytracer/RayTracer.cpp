@@ -1,3 +1,11 @@
+/*
+*
+*	Author : Umut Riza ERTURK
+*	March 2010
+*	
+*
+*/
+
 #include <windows.h>
 #include "RayTracer.h"
 #include "Sphere.h"
@@ -32,24 +40,27 @@ RayTracer::RayTracer(unsigned int uiNumOfThreads, PixelBuffer* pPixelBuffer,Scen
 RayTracer::~RayTracer(void)
 {
 
+	// terminates threads and close thread handles
 	for (int i =0; i < m_uiNumOfThreads; i++)
 	{
 		TerminateThread(m_ThreadHandles[i],0);
 		CloseHandle(m_ThreadHandles[i]);
 
 	}
+	// delete everything
 	SAFE_DELETE(m_pScene);
 	SAFE_DELETE(m_pPixelBuffer);
 	SAFE_DELETE(m_pCamera);
 
 }
 
-int iX = 0;
+/************************************************************************/
+/* Iterative form of ray tracing                                        */
+/************************************************************************/
 void RayTracer::renderPixel(std::stack<Ray> &rays, Colour3f& rColour)
 {
 	int iDepth=0;
-	std::vector<std::pair<Colour3f,VisualObject*>> colours;
-	Real rCumulativeReflect=1.f;
+	Real rCumulativeReflect=1.f;	// reflection multiplier for a ray after reflections
 	bool bNoIntersection = true;
 	while(!rays.empty())
 	{
@@ -59,11 +70,19 @@ void RayTracer::renderPixel(std::stack<Ray> &rays, Colour3f& rColour)
 		Real rDistance = MAX_FLOAT;
 		Ray rRay = rays.top();
 		rays.pop();
+		// find the nearest intersection point and the distance
 		IntersectionType intersectionType = m_pScene->getNearestIntersection(rRay,pVisaulObject, rDistance );
+
+		// if there is an intersection within the given distance
 		if (pVisaulObject)
 		{	
 			bNoIntersection = false;
 			Vector3& rRayDir = rRay.dir;
+
+			// shift the ray a bit by multiplying with EPSILON
+			// so the point wont be inside or on the intersected object
+			// if the intersection is inside we need to push forward a bit
+			// if the intersection is outside we need to pull behind a bit
 			Vector3 vIntersectionPoint = rRay.point + rRayDir * (rDistance + intersectionType * EPSILON);
 
 			Vector3 vNormalAtIntersection = pVisaulObject->getNormal(vIntersectionPoint);
@@ -73,18 +92,27 @@ void RayTracer::renderPixel(std::stack<Ray> &rays, Colour3f& rColour)
 			
 			std::vector<PointLight*>& lightObjects = m_pScene->m_LightObjects;
 			// shading computation
+			// look if there is any object between the intersection point
+			// and each light source in order calculate shading of the point
 			for (int k = 0; k < uiSz; k++)
 			{
 				pLight = lightObjects[k];
 
-					Real rLightSourceDistance;
-					Real rLightSourceDistanceSQ;
+				Real rLightSourceDistance;
+				Real rLightSourceDistanceSQ;
 
-					Vector3 vDirLight = pLight->m_Position - vIntersectionPoint;
-					rLightSourceDistanceSQ = vDirLight.squaredLength();
-					rLightSourceDistance = MathUtil::sqrtX(rLightSourceDistanceSQ);
-					vDirLight /= rLightSourceDistance;
-					Real rBrightnessFactor = 1.f / (rLightSourceDistanceSQ) ;// rLightSourceDistance;
+				Vector3 vDirLight = pLight->m_Position - vIntersectionPoint;
+				rLightSourceDistanceSQ = vDirLight.squaredLength();
+				rLightSourceDistance = MathUtil::sqrtX(rLightSourceDistanceSQ);
+				
+				// normalise the dir vector
+				vDirLight /= rLightSourceDistance;
+				Real rBrightnessFactor = 1.f / (rLightSourceDistanceSQ) ;// L = C/(d^2)
+
+				// if the shading is below a treshold
+				if (rBrightnessFactor > EPSILON)
+				{
+					// if there is no obstacle between the light and the intersection point
 					if( m_pScene->anyNonLightIntersects(Ray(vDirLight,vIntersectionPoint),rLightSourceDistance) == false)
 					{
 
@@ -104,17 +132,22 @@ void RayTracer::renderPixel(std::stack<Ray> &rays, Colour3f& rColour)
 						Real rDot = vTmp.dot(rRayDir);
 						if (rDot > 0)
 						{
-							tmpColour += (powf(rDot,20) * pVisaulObject->m_pMaterial->m_rSpecular * rBrightnessFactor) * cLightColour;
+							tmpColour += (powf(rDot,16) * pVisaulObject->m_pMaterial->m_rSpecular * rBrightnessFactor) * cLightColour;
 						}
-					}				
-	
+					}	
+				}
 				
 			}
 
+			// calculate the colour value after reflections
 			rColour += tmpColour * rCumulativeReflect;
+
 			// reflected ray computation
 			if(iDepth<m_uiTraceDepth)
 			{
+				// push the new ray to the stack
+				// to be calculated
+				// also update the reflectivity
 				Vector3 vReflectedRayDir = rRayDir - (2.f * rRayDir.dot(vNormalAtIntersection)) * vNormalAtIntersection;
 				vReflectedRayDir.normalise();
 				rays.push(Ray(vReflectedRayDir,vIntersectionPoint + vReflectedRayDir * EPSILON));
@@ -129,10 +162,12 @@ void RayTracer::renderPixel(std::stack<Ray> &rays, Colour3f& rColour)
 	}
 }
 
-int g_threadId=1;
+/************************************************************************/
+/* WIN API function for render thread                                   */
+/************************************************************************/
 DWORD WINAPI renderThread(LPVOID param)
 {
-	int threadNo = g_threadId++;
+	// fetching the necessary values from the ray tracer to fasten up
 	Pixel* pixelsToBeRendered;
 	unsigned int uiStartX;
 	unsigned int uiStartY;
@@ -141,17 +176,29 @@ DWORD WINAPI renderThread(LPVOID param)
 	Vector3 vStartPoint;
 	Vector3 &vrCameraPoint = gs_pRayTracer->m_pCamera->m_CameraPoint;
 	unsigned int uiRayPerPixel = gs_pRayTracer->m_uiRayPerPixel;
+	unsigned int uiNumOfPixels = gs_pRayTracer->m_uiNumOfPixels;
+	const Vector3 &vWidthStepSize = gs_pRayTracer->m_vWidthStepSize;
+	const Vector3 &vHeightStepSize = gs_pRayTracer->m_vHeightStepSize;
+	Real rDivFactor = gs_pRayTracer->m_rDivFactor;
 	Ray ray;
-	//int i = 100;
+	ray.point = vrCameraPoint;
+
+	std::stack<Ray> rays;
+	// loop until 
 	while(1)
 	{
+		// get the pixels to be rendered
 		gs_pRayTracer->m_pPixelBuffer->getNextPixels( pixelsToBeRendered, uiStartX, uiStartY );
-		vStartPoint =  vrTopLeft + (gs_pRayTracer->m_vWidthStepSize * (Real)uiStartX * uiRayPerPixel ) + (gs_pRayTracer->m_vHeightStepSize * (Real)uiStartY * uiRayPerPixel) ;
-		ray.point = vrCameraPoint;
-		for(unsigned int uiPixelIndex = 0 ; uiPixelIndex < gs_pRayTracer->m_uiNumOfPixels; uiPixelIndex++)
+		
+		// find the start point for the rendering
+		vStartPoint =  vrTopLeft + (vWidthStepSize * (Real)uiStartX * uiRayPerPixel ) + (vHeightStepSize * (Real)uiStartY * uiRayPerPixel) ;
+		
+		// trace all the pixels in the batch
+		for(unsigned int uiPixelIndex = 0 ; uiPixelIndex < uiNumOfPixels; uiPixelIndex++)
 		{
-			std::stack<Ray> rays;
 			colourOfPixel =  Colour3f(0);/*gs_pRayTracer->m_AmbientLight*/;
+
+			// trace all the rays in the pixel
 			for(unsigned int uiRayPerPixelX = 0; uiRayPerPixelX < uiRayPerPixel; uiRayPerPixelX++ )
 			{
 				Vector3 vTmpStartPoint = vStartPoint;
@@ -162,13 +209,18 @@ DWORD WINAPI renderThread(LPVOID param)
 					rays.push(ray);
 					Colour3f colourOfRender(0);
 					gs_pRayTracer->renderPixel(rays,colourOfRender);
-					colourOfPixel += colourOfRender;
-					vTmpStartPoint += gs_pRayTracer->m_vWidthStepSize;
+					colourOfPixel = colourOfRender;
+					
+					// move forward
+					vTmpStartPoint += vWidthStepSize;
 				}
-				vTmpStartPoint += gs_pRayTracer->m_vHeightStepSize;
+				// move down
+				vTmpStartPoint += vHeightStepSize;
 			}
-			vStartPoint += gs_pRayTracer->m_vWidthStepSize * uiRayPerPixel;
-			clampColour3fToPixel(colourOfPixel * gs_pRayTracer->m_rDivFactor, *pixelsToBeRendered);
+			vStartPoint += vWidthStepSize * uiRayPerPixel;
+			
+			// convert the colour3f value to pixel value
+			clampColour3fToPixel(colourOfPixel * rDivFactor, *pixelsToBeRendered);
 			pixelsToBeRendered++;
 		}
 	}	

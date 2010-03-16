@@ -27,6 +27,7 @@
 #define NUM_OF_MAX_REFLECTIONS	8
 #define SQRT_OF_RAYS_PER_PIXEL	1
 #define NUM_OF_THREADS_PER_CPU	1
+#define NUM_OF_PIXELS_TO_BE_RENDERED_BY_A_THREAD_AT_A_TIME	100
 
 
 //----------------------------------------
@@ -172,7 +173,11 @@ void initRayTracer()
 
 	g_pCamera		= new Camera(Vector3(-4,3,0),Vector3(-4,-3,0),Vector3(0,0,1),5);
 	g_pScene		= new Scene();
-	g_pScreenBuffer = new PixelBuffer(SCREEN_WIDTH,SCREEN_HEIGHT,100);
+	g_pScreenBuffer = new PixelBuffer(
+		SCREEN_WIDTH,
+		SCREEN_HEIGHT,
+		NUM_OF_PIXELS_TO_BE_RENDERED_BY_A_THREAD_AT_A_TIME
+		);
 	g_pScreenPixels = g_pScreenBuffer->m_pScreenBuffer;
 	g_pRayTracer	= new RayTracer(
 		dwNumOfThreads,
